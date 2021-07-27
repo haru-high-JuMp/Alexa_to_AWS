@@ -10,11 +10,33 @@ from ask_sdk_core.handler_input import HandlerInput
 
 from ask_sdk_model import Response
 
+import json
 import boto3
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+class AWSIoT():
+    
+    def pub(self, order):
+        topic = 'test/pub'
+        payload = order
+        print(payload)
+        
+        try:
+            print("publish")
+            #iot = boto3.client('iot-data', endpoint_url="a1g1dkjw8ju89u-ats.iot.ap-northeast-1.amazonaws.com")
+            iot = boto3.client('iot-data')
+            iot.publish(
+                topic=topic,
+                qos=0,
+                payload=json.dumps(payload, ensure_ascii=False)
+            )
+            return "Succeeeded"
+            
+        except Exception as e:
+            print(e)
+            return "Failed"
 
 class LaunchRequestHandler(AbstractRequestHandler):
     """Handler for Skill Launch."""
@@ -46,7 +68,9 @@ class ForwardIntentHandler(AbstractRequestHandler):
         speak_output = "前に進みます"
         order = "Forward"
         IoT = AWSIoT()
-        IoT.pub(order)
+        print("IoT Check")
+        ans = IoT.pub(order)
+        print(ans)
             
         return (
             handler_input.response_builder
@@ -67,7 +91,9 @@ class BackIntentHandler(AbstractRequestHandler):
         speak_output = "後ろに下がります"
         order = "Back"
         IoT = AWSIoT()
-        IoT.pub(order)
+        print("IoT Check")
+        ans = IoT.pub(order)
+        print(ans)
         
         return (
             handler_input.response_builder
@@ -185,24 +211,6 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
                 .response
         )
 
-class AWSIoT():
-    
-    def pub(self, order):
-        topic = 'test/pub'
-        payload = order
-    
-        try:
-            iot = boto3.client('iot-data', endpoint_url="a1g1dkjw8ju89u-ats.iot.ap-northeast-1.amazonaws.com")
-            iot.publish(
-                topic=topic,
-                qos=0,
-                payload=json.dumps(payload, ensure_ascii=False)
-            )
- 
-    
-        except Exception as e:
-            print(e)
-
 
 # The SkillBuilder object acts as the entry point for your skill, routing all request and response
 # payloads to the handlers above. Make sure any new handlers or interceptors you've
@@ -223,4 +231,3 @@ sb.add_request_handler(IntentReflectorHandler()) # make sure IntentReflectorHand
 sb.add_exception_handler(CatchAllExceptionHandler())
 
 lambda_handler = sb.lambda_handler()
-
